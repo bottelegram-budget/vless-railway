@@ -106,14 +106,35 @@ let token = localStorage.getItem("vless_token") || "";
 let peers = [];
 let prevTraffic = {};
 let lastActive = {};
-const api = async (path, opts = {}) => {
-  const r = await fetch(path, {
-    ...opts,
-    headers: { "Content-Type": "application/json", "X-Auth-Token": token, ...(opts.headers||{}) },
-  });
-  if (r.status === 401) { logout(); throw new Error("unauthorized"); }
-  return r.json();
+const retryable = (e) => e && e.retryable;
+const withRetry = async (fn, attempts = 6) => {
+  let lastErr;
+  for (let i = 0; i < attempts; i++) {
+    try { return await fn(); }
+    catch (e) {
+      lastErr = e;
+      if (!retryable(e)) throw e;
+      await new Promise(r => setTimeout(r, 250 * Math.pow(2, i)));
+    }
+  }
+  throw lastErr;
 };
+const api = async (path, opts = {}) => withRetry(async () => {
+  let r;
+  try {
+    r = await fetch(path, {
+      ...opts,
+      headers: { "Content-Type": "application/json", "X-Auth-Token": token, ...(opts.headers||{}) },
+    });
+  } catch (e) {
+    e.retryable = true;
+    throw e;
+  }
+  if (r.status === 401) { logout(); throw new Error("unauthorized"); }
+  if (r.status === 404 || r.status >= 500) { const e = new Error("HTTP " + r.status); e.retryable = true; throw e; }
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  return r.json();
+});
 const toast = (msg) => { const t = document.getElementById("toast"); t.textContent = msg; t.style.display = "block"; setTimeout(() => t.style.display = "none", 2500); };
 
 function login() {
@@ -202,8 +223,11 @@ async function showQr(id, name, link) {
   status.textContent = "Loading QR…";
   status.style.color = "var(--dim)";
   try {
-    const r = await fetch("/api/qr/" + id, { headers: { "X-Auth-Token": token } });
-    if (!r.ok) throw new Error("HTTP " + r.status);
+    const r = await withRetry(async () => {
+      const res = await fetch("/api/qr/" + id, { headers: { "X-Auth-Token": token } });
+      if (!res.ok) { const e = new Error("HTTP " + res.status); e.retryable = true; throw e; }
+      return res;
+    });
     img.src = URL.createObjectURL(await r.blob());
     img.style.display = "block";
     status.textContent = "";
@@ -235,7 +259,7 @@ function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&
 function escapeAttr(s) { return escapeHtml(s); }
 
 checkAuth();
-setInterval(() => { if (!document.body.classList.contains("noauth")) loadPeers(); }, 8000);
+setInterval(() => { if (!document.body.classList.contains("noauth")) loadPeers().catch(() => {}); }, 8000);
 </script>
 </body>
 </html>
