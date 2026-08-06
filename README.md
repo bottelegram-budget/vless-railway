@@ -8,7 +8,7 @@ Deployable VLESS proxy using [Xray-core](https://github.com/XTLS/Xray-core), des
 
 ## Deploy to Railway
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template?template=YOUR_GITHUB_USER/vless-railway)
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template?template=surfrpt1/vless-railway)
 
 Or manually:
 
