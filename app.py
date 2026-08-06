@@ -209,6 +209,23 @@ def api_auth():
     return jsonify({"ok": check_auth()})
 
 
+@app.route("/api/dbg/stats")
+def api_dbg_stats():
+    if not check_auth():
+        return jsonify({"error": "unauthorized"}), 401
+    res = {}
+    for cmd in (
+        ["api", "statsquery", "--server=127.0.0.1:%d" % XRAY_API_PORT, "-pattern", "user>>>"],
+        ["api", "statsgetallonlineusers", "--server=127.0.0.1:%d" % XRAY_API_PORT],
+    ):
+        try:
+            p = subprocess.run([XRAY_BIN] + cmd, capture_output=True, text=True, timeout=10)
+            res[" ".join(cmd)] = {"rc": p.returncode, "stdout": p.stdout[:2000], "stderr": p.stderr[:2000]}
+        except Exception as e:
+            res[" ".join(cmd)] = {"error": str(e)}
+    return jsonify(res)
+
+
 def main():
     import sys
     if "--gen-config" in sys.argv:
