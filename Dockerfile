@@ -14,7 +14,7 @@ RUN wget -q -O /tmp/caddy.tar.gz https://github.com/caddyserver/caddy/releases/d
     chmod +x /usr/local/bin/caddy
 
 # Dashboard deps
-RUN pip install --break-system-packages --no-cache-dir flask qrcode
+RUN pip install --break-system-packages --no-cache-dir flask qrcode Pillow
 
 WORKDIR /app
 COPY . /app
