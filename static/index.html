@@ -166,6 +166,7 @@ async function loadAll() {
 }
 
 function statusBadge(p, now) {
+  if (p.online) return '<span class="badge on">ONLINE</span>';
   const last = lastActive[p.id];
   if (last && now - last < 45000) return '<span class="badge on">ONLINE</span>';
   if (last) return '<span class="badge warn">IDLE · ' + ago(now - last) + '</span>';
@@ -177,12 +178,13 @@ async function loadPeers() {
   peers = list;
   const now = Date.now();
   for (const p of list) {
+    if (p.online) { lastActive[p.id] = now; }
     const t = p.uplink + p.downlink;
     if (t > (prevTraffic[p.id] || 0)) lastActive[p.id] = now;
     prevTraffic[p.id] = t;
   }
   document.getElementById("srvPeers").textContent = peers.length;
-  const online = peers.filter(p => lastActive[p.id] && now - lastActive[p.id] < 45000).length;
+  const online = peers.filter(p => p.online || (lastActive[p.id] && now - lastActive[p.id] < 45000)).length;
   document.getElementById("activeCount").textContent = "(" + online + " online)";
   const rows = peers.map(p => `
     <tr>

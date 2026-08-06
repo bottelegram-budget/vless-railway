@@ -51,7 +51,7 @@ def save_peers(peers):
 
 def gen_config():
     peers = load_peers()
-    clients = [{"id": p["id"], "flow": ""} for p in peers]
+    clients = [{"id": p["id"], "email": p["id"], "flow": ""} for p in peers]
     with open(os.path.join(BASE_DIR, "config.template.json")) as f:
         tpl = f.read()
     cfg = tpl.replace("${CLIENTS}", json.dumps(clients)).replace("${WS_PATH}", WS_PATH)
@@ -69,26 +69,41 @@ def reload_xray():
 
 
 def fetch_stats():
-    """Query Xray API for per-user traffic."""
+    """Query Xray API for per-user traffic (JSON output)."""
     try:
         out = subprocess.run(
             [XRAY_BIN, "api", "statsquery", "--server=127.0.0.1:%d" % XRAY_API_PORT, "-pattern", "user>>>"],
             capture_output=True, text=True, timeout=10,
         ).stdout
+        data = json.loads(out)
     except Exception:
         return {}
     stats = {}
-    for line in out.splitlines():
-        line = line.strip()
-        if "user>>>" not in line:
-            continue
-        m = re.match(r"user>>>(.*)>>>traffic>>>(uplink|downlink)>>>value = (\d+)", line)
+    for item in data.get("stat", []):
+        m = re.match(r"user>>>(.+)>>>traffic>>>(uplink|downlink)", item.get("name", ""))
         if not m:
             continue
-        email, direction, value = m.group(1), m.group(2), int(m.group(3))
+        email, direction = m.group(1), m.group(2)
+        try:
+            value = int(item.get("value", 0))
+        except (TypeError, ValueError):
+            value = 0
         stats.setdefault(email, {"uplink": 0, "downlink": 0})
         stats[email][direction] = value
     return stats
+
+
+def fetch_online():
+    """Query Xray API for currently connected user emails."""
+    try:
+        out = subprocess.run(
+            [XRAY_BIN, "api", "statsgetallonlineusers", "--server=127.0.0.1:%d" % XRAY_API_PORT],
+            capture_output=True, text=True, timeout=10,
+        ).stdout
+        data = json.loads(out)
+    except Exception:
+        return set()
+    return set(data.get("users", []))
 
 
 def share_link(peer_id):
@@ -123,6 +138,7 @@ def api_peers():
     if not check_auth():
         return jsonify({"error": "unauthorized"}), 401
     stats = fetch_stats()
+    online = fetch_online()
     peers = []
     for p in load_peers():
         s = stats.get(p["id"], {"uplink": 0, "downlink": 0})
@@ -133,6 +149,7 @@ def api_peers():
             "uplink": s["uplink"],
             "downlink": s["downlink"],
             "active": (s["uplink"] + s["downlink"]) > 0,
+            "online": p["id"] in online,
             "share": share_link(p["id"]),
         })
     return jsonify(peers)
