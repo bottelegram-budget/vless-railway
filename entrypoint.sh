@@ -1,6 +1,8 @@
 #!/bin/sh
 set -e
 
+echo "[entrypoint] starting with PORT=${PORT:-unset} UUID=${UUID:+set} WS_PATH=${WS_PATH:-/ws}"
+
 if [ -z "$UUID" ]; then
   echo "ERROR: UUID environment variable is not set (generate with: uuidgen)" >&2
   exit 1

@@ -14,13 +14,11 @@ RUN wget -q -O /tmp/caddy.tar.gz https://github.com/caddyserver/caddy/releases/d
     chmod +x /usr/local/bin/caddy
 
 # Dashboard deps
-RUN pip install --no-cache-dir flask qrcode
+RUN pip install --break-system-packages --no-cache-dir flask qrcode
 
 WORKDIR /app
 COPY . /app
 
-RUN chmod +x /entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
-EXPOSE 443
-
-CMD ["/entrypoint.sh"]
+CMD ["/app/entrypoint.sh"]
