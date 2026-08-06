@@ -1,10 +1,11 @@
-# VLESS + WebSocket + UDP on Railway
+# VLESS + WebSocket + UDP with Dashboard — Railway deploy
 
-Deployable VLESS proxy using [Xray-core](https://github.com/XTLS/Xray-core), designed for Railway.
+Deployable VLESS proxy using [Xray-core](https://github.com/XTLS/Xray-core) with a built-in web dashboard, designed for Railway.
 
 - **Protocol**: VLESS
 - **Transport**: WebSocket (WS)
-- **UDP**: Supported — enables QUIC/DNS-over-UDP traffic (e.g. YouTube, gaming, video calls work through the tunnel)
+- **UDP**: Supported — QUIC/DNS-over-UDP traffic (YouTube, gaming, video calls) tunneled
+- **Dashboard**: live server info, peer management, per-peer traffic stats, QR codes
 
 ## Deploy to Railway
 
@@ -13,33 +14,44 @@ Deployable VLESS proxy using [Xray-core](https://github.com/XTLS/Xray-core), des
 Or manually:
 
 1. Create a new project on [Railway](https://railway.app)
-2. Choose **Deploy from GitHub repo** and select this repo
+2. Choose **Deploy from GitHub repo** and select `surfrpt1/vless-railway`
 3. Add the required variables (below)
 4. Railway builds the Dockerfile and assigns a public domain (e.g. `https://yourapp.up.railway.app`)
-5. Point your client at that domain, port 443, path `/ws`
+5. Open your domain in a browser → the dashboard appears
 
 ## Environment Variables
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `UUID` | **Yes** | — | Client UUID. Generate with `uuidgen` or any online UUID v4 generator |
-| `PORT` | No | `443` | Listening port (Railway overrides with `$PORT` if set by platform) |
-| `WS_PATH` | No | `/` | WebSocket path, e.g. `/ws` (recommend a custom path) |
-| `HOST_HEADER` | No | *(none)* | Optional Host header override for WS handshake |
+| `UUID` | **Yes** | — | Initial client UUID (the dashboard creates more). Generate with `uuidgen` |
+| `ADMIN_TOKEN` | **Recommended** | *(none — dashboard unauthenticated!)* | Password for the dashboard admin API |
+| `WS_PATH` | No | `/ws` | WebSocket path (recommend a custom path, e.g. `/ws`) |
+| `PUBLIC_DOMAIN` | No | auto | Override the domain shown in share links/QR (normally auto-detected from Railway) |
 
-> Railway auto-injects `PORT` — set your client's port to the Railway public port (usually 443).
+> Railway auto-injects `PORT` and `RAILWAY_PUBLIC_DOMAIN` — usually nothing to set beyond `UUID` and `ADMIN_TOKEN`.
 
-## Client Configuration
+## Dashboard features
+
+Open `https://yourapp.up.railway.app/`:
+
+- **Server info card** — domain, port, TLS, WS path
+- **Peers table** — every client UUID with:
+  - Live status (ACTIVE / idle) from Xray traffic stats (refreshes every 8s)
+  - Download/upload traffic totals
+  - Share link with copy button
+- **+ New peer** — create a new UUID with an optional name (auto-applied to Xray via config reload)
+- **Delete peer** — removes a client UUID
+- **QR code** — scan from any VLESS-capable client app (v2rayNG, NekoBox, Streisand, Shadowrocket, etc.) to import the server
+
+## Client configuration
 
 ### v2rayN / v2rayNG / NekoBox (share link)
 
 ```
-vless://UUID@APPNAME.up.railway.app:443?encryption=none&security=tls&type=ws&host=APPNAME.up.railway.app&path=%2Fws#railway-vless
+vless://UUID@APPNAME.up.railway.app:443?encryption=none&security=tls&type=ws&host=APPNAME.up.railway.app&path=%2Fws#vless-railway
 ```
 
-Replace:
-- `UUID` — your generated UUID
-- `APPNAME.up.railway.app` — your Railway public domain
+Or just scan the QR code from the dashboard.
 
 ### Manual settings (v2rayNG)
 
@@ -47,7 +59,7 @@ Replace:
 |---|---|
 | Address | `APPNAME.up.railway.app` |
 | Port | `443` |
-| User ID | `UUID` |
+| User ID | one of the peer UUIDs from the dashboard |
 | Encryption | `none` |
 | Transport | `ws` (WebSocket) |
 | Host | `APPNAME.up.railway.app` |
@@ -55,12 +67,16 @@ Replace:
 | TLS | `tls` |
 | UDP | enabled (default) |
 
-## How UDP works
+## How it works
 
-VLESS tunnels both TCP and UDP inside the WebSocket stream. The `freedom` outbound with `domainStrategy: UseIP` resolves domains locally and forwards UDP datagrams, so QUIC-based apps (YouTube, Cloudflare, gaming) work through the tunnel.
+- **Caddy** terminates the public HTTP(S) on Railway's port and routes `${WS_PATH}` → Xray, everything else → dashboard
+- **Xray** listens internally on 8080 (VLESS+WS) and exposes its Stats API on `127.0.0.1:10085` for traffic metrics
+- **Dashboard** (Flask) reads/writes `data/peers.json`, regenerates the Xray config, and triggers a SIGHUP reload on every peer change
+- Private IPs are routed to **blackhole** to prevent open-relay abuse
+- Peers persist in the container filesystem — for persistent storage across redeploys, connect a Railway volume at `/app/data`
 
-## Notes
+## Security notes
 
-- This config routes **private IPs to blackhole** to prevent the proxy being used as an open relay for internal-network scanning.
-- Regenerate the UUID in production — never ship the example value.
-- Local testing: `docker build -t vless-railway . && docker run -e UUID=$(uuidgen) -p 443:443 vless-railway`
+- Set `ADMIN_TOKEN` — without it the dashboard is open to anyone who finds your URL
+- Regenerate your UUID in production — never ship the example value
+- Add a Railway volume (`/app/data`) to keep peers across deployments

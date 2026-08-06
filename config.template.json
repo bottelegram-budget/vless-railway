@@ -2,27 +2,33 @@
   "log": {
     "loglevel": "warning"
   },
+  "stats": {},
+  "api": {
+    "tag": "api",
+    "listen": "127.0.0.1:10085",
+    "services": ["StatsService"]
+  },
+  "policy": {
+    "levels": {
+      "0": {
+        "statsUserUplink": true,
+        "statsUserDownlink": true
+      }
+    }
+  },
   "inbounds": [
     {
       "listen": "0.0.0.0",
-      "port": ${PORT},
+      "port": 8080,
       "protocol": "vless",
       "settings": {
         "decryption": "none",
-        "clients": [
-          {
-            "id": "${UUID}",
-            "flow": ""
-          }
-        ]
+        "clients": ${CLIENTS}
       },
       "streamSettings": {
         "network": "ws",
         "wsSettings": {
-          "path": "${WS_PATH}",
-          "headers": {
-            "Host": "${HOST_HEADER}"
-          }
+          "path": "${WS_PATH}"
         }
       },
       "sniffing": {

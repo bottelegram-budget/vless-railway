@@ -2,6 +2,12 @@
 .DS_Store
 Thumbs.db
 
+# Runtime state
+data/
+config.json
+__pycache__/
+*.pyc
+
 # Misc
 *.log
 .env
