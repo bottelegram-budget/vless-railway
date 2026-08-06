@@ -1,0 +1,6 @@
+* text=auto
+
+# Shell scripts MUST stay LF or Docker fails to execute them
+*.sh text eol=lf
+Dockerfile text eol=lf
+Caddyfile text eol=lf
