@@ -68,12 +68,31 @@ def reload_xray():
         pass
 
 
+_xray_api_ready = False
+
+
+def _check_xray_api():
+    global _xray_api_ready
+    if _xray_api_ready:
+        return True
+    import socket
+    try:
+        s = socket.create_connection(("127.0.0.1", XRAY_API_PORT), timeout=2)
+        s.close()
+        _xray_api_ready = True
+        return True
+    except Exception:
+        return False
+
+
 def fetch_stats():
     """Query Xray API for per-user traffic (JSON output)."""
+    if not _check_xray_api():
+        return {}
     try:
         out = subprocess.run(
             [XRAY_BIN, "api", "statsquery", "--server=127.0.0.1:%d" % XRAY_API_PORT, "-pattern", "user>>>"],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True, text=True, timeout=5,
         ).stdout
         data = json.loads(out)
     except Exception:
@@ -95,15 +114,18 @@ def fetch_stats():
 
 def fetch_online():
     """Query Xray API for currently connected user emails."""
+    if not _check_xray_api():
+        return set()
     try:
         out = subprocess.run(
             [XRAY_BIN, "api", "statsgetallonlineusers", "--server=127.0.0.1:%d" % XRAY_API_PORT],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True, text=True, timeout=5,
         ).stdout
         data = json.loads(out)
     except Exception:
         return set()
-    return set(data.get("users", []))
+    raw = data.get("users", [])
+    return {u.split(">>>")[1] for u in raw if ">>>" in u}
 
 
 def share_link(peer_id):
@@ -121,6 +143,11 @@ def check_auth():
 @app.route("/")
 def index():
     return send_from_directory("static", "index.html")
+
+
+@app.route("/api/healthz")
+def api_healthz():
+    return jsonify({"ok": True})
 
 
 @app.route("/api/info")
@@ -207,23 +234,6 @@ def img_to_png(img):
 @app.route("/api/auth")
 def api_auth():
     return jsonify({"ok": check_auth()})
-
-
-@app.route("/api/dbg/stats")
-def api_dbg_stats():
-    if not check_auth():
-        return jsonify({"error": "unauthorized"}), 401
-    res = {}
-    for cmd in (
-        ["api", "statsquery", "--server=127.0.0.1:%d" % XRAY_API_PORT, "-pattern", "user>>>"],
-        ["api", "statsgetallonlineusers", "--server=127.0.0.1:%d" % XRAY_API_PORT],
-    ):
-        try:
-            p = subprocess.run([XRAY_BIN] + cmd, capture_output=True, text=True, timeout=10)
-            res[" ".join(cmd)] = {"rc": p.returncode, "stdout": p.stdout[:2000], "stderr": p.stderr[:2000]}
-        except Exception as e:
-            res[" ".join(cmd)] = {"error": str(e)}
-    return jsonify(res)
 
 
 def main():
