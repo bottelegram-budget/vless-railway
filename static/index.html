@@ -1,267 +1,849 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>VLESS Dashboard</title>
 <style>
-:root { --bg:#0b0e14; --card:#131722; --line:#232a3b; --line2:#2e3750; --txt:#e8ecf4; --dim:#8a93a8; --acc:#4f8cff; --ok:#2ecc71; --warn:#f1c40f; --err:#e74c3c; }
+:root{
+  --bg:#0b0e14; --card:#131722; --card2:#0d1017; --line:#232a3b; --line2:#2e3750;
+  --txt:#e8ecf4; --dim:#8a93a8; --acc:#4f8cff; --ok:#2ecc71; --warn:#f1c40f; --err:#e74c3c;
+  --accent2:#a970ff; --shadow:rgba(0,0,0,.25);
+}
+html[data-theme="light"]{
+  --bg:#f2f5fb; --card:#ffffff; --card2:#eef2f8; --line:#d7dde8; --line2:#c2cadd;
+  --txt:#1b2230; --dim:#5a6577; --acc:#2f6fed; --shadow:rgba(30,50,100,.12);
+}
 * { box-sizing:border-box; margin:0; padding:0; }
-body { background:var(--bg); color:var(--txt); font-family:'Segoe UI',system-ui,sans-serif; min-height:100vh; padding:24px; }
-h1 { font-size:20px; margin-bottom:20px; display:flex; align-items:center; gap:10px; }
-h1 span { color:var(--dim); font-weight:400; font-size:14px; }
-.card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:22px; margin-bottom:22px; box-shadow:0 4px 20px rgba(0,0,0,.25); }
-.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; }
-.stat { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; }
-.stat .label { color:var(--dim); font-size:12px; text-transform:uppercase; letter-spacing:.6px; }
-.stat .value { font-size:18px; margin-top:8px; word-break:break-all; }
+body { background:var(--bg); color:var(--txt); font-family:'Segoe UI',system-ui,-apple-system,sans-serif; min-height:100vh; padding:20px; transition:background .2s,color .2s; }
+.wrap { max-width:1100px; margin:0 auto; }
+header { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
+h1 { font-size:20px; display:flex; align-items:center; gap:10px; }
+h1 .sub { color:var(--dim); font-weight:400; font-size:13px; word-break:break-all; }
+.toolbar { margin-left:auto; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.grow { flex:1; min-width:140px; }
+.iconbtn { background:var(--card); border:1px solid var(--line2); color:var(--txt); border-radius:8px; width:36px; height:36px; font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.iconbtn:hover { border-color:var(--acc); }
+select { background:var(--card2); border:1px solid var(--line2); border-radius:8px; color:var(--txt); padding:8px 10px; font-size:13px; outline:none; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:16px; box-shadow:0 4px 20px var(--shadow); }
+.card > .head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+.card > .head h2 { font-size:15px; font-weight:600; display:flex; align-items:center; gap:8px; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; }
+.stat { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 16px; box-shadow:0 4px 16px var(--shadow); }
+.stat .label { color:var(--dim); font-size:11px; text-transform:uppercase; letter-spacing:.6px; display:flex; align-items:center; gap:6px; }
+.stat .value { font-size:16px; margin-top:6px; word-break:break-all; }
+.stat .value small { color:var(--dim); font-weight:400; font-size:12px; }
+.hint { color:var(--dim); font-size:11px; }
+.card-title { font-size:15px; font-weight:600; margin-bottom:12px; }
 table { width:100%; border-collapse:separate; border-spacing:0; }
-thead th { color:var(--dim); font-weight:500; font-size:11px; text-transform:uppercase; letter-spacing:.6px; text-align:left; padding:10px 12px; border-bottom:2px solid var(--line2); }
-tbody td { padding:12px; font-size:14px; border-bottom:1px solid var(--line); vertical-align:middle; }
-tbody tr:hover td { background:rgba(79,140,255,.04); }
+thead th { color:var(--dim); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.6px; text-align:left; padding:8px 10px; border-bottom:2px solid var(--line2); cursor:pointer; user-select:none; white-space:nowrap; }
+thead th:hover { color:var(--acc); }
+thead th .arr { font-size:10px; margin-left:3px; }
+tbody td { padding:11px 10px; font-size:13px; border-bottom:1px solid var(--line); vertical-align:middle; }
 tbody tr:last-child td { border-bottom:none; }
-button { background:var(--acc); color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:14px; cursor:pointer; transition:filter .15s; }
-button:hover { filter:brightness(1.15); }
-button.danger { background:transparent; color:var(--err); border:1px solid var(--err); }
+tbody tr:hover td { background:rgba(79,140,255,.05); }
+button { background:var(--acc); color:#fff; border:none; border-radius:8px; padding:8px 13px; font-size:13px; cursor:pointer; transition:filter .15s, opacity .15s; }
+button:hover { filter:brightness(1.12); }
+button:disabled { opacity:.45; cursor:not-allowed; }
 button.ghost { background:transparent; color:var(--txt); border:1px solid var(--line2); }
-input { background:#0d1017; border:1px solid var(--line2); border-radius:8px; color:var(--txt); padding:8px 12px; font-size:14px; outline:none; }
+button.ghost:hover { border-color:var(--acc); color:var(--acc); }
+button.danger { background:transparent; color:var(--err); border:1px solid var(--err); }
+button.sm { padding:5px 10px; font-size:12px; }
+input { background:var(--card2); border:1px solid var(--line2); border-radius:8px; color:var(--txt); padding:8px 12px; font-size:13px; outline:none; }
 input:focus { border-color:var(--acc); }
-.flex { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-.badge { display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; white-space:nowrap; }
+.flex { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.rowbar { display:flex; align-items:center; gap:6px; }
+.bar { flex:1; min-width:48px; max-width:120px; height:5px; background:var(--line); border-radius:4px; overflow:hidden; }
+.bar > i { display:block; height:100%; background:var(--acc); border-radius:4px; }
+.badge { display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; white-space:nowrap; }
 .badge::before { content:""; width:7px; height:7px; border-radius:50%; background:currentColor; }
 .badge.on { background:rgba(46,204,113,.12); color:var(--ok); }
-.badge.off { background:rgba(139,147,163,.12); color:var(--dim); }
-.badge.warn { background:rgba(241,196,15,.12); color:var(--warn); }
-.link { display:flex; gap:8px; align-items:center; max-width:100%; }
-.link code { background:#0d1017; border:1px solid var(--line); border-radius:6px; padding:4px 8px; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; min-width:0; }
-#qrModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); align-items:center; justify-content:center; z-index:10; }
-#qrModal.open { display:flex; }
-#qrModal .box { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:24px; text-align:center; max-width:90vw; box-shadow:0 8px 40px rgba(0,0,0,.5); }
-#qrModal img { width:260px; height:260px; background:#fff; border-radius:8px; padding:8px; }
-#qrModal .name { margin:12px 0 4px; font-weight:600; }
-#qrModal code { display:block; font-size:11px; color:var(--dim); word-break:break-all; margin-top:8px; }
-#qrStatus { color:var(--err); font-size:13px; min-height:18px; margin-top:8px; }
-.login { max-width:360px; margin:15vh auto; }
-.toast { position:fixed; bottom:20px; right:20px; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:12px 16px; display:none; box-shadow:0 4px 20px rgba(0,0,0,.4); }
+.badge.off { background:rgba(140,150,170,.14); color:var(--dim); }
+.badge.warn { background:rgba(241,196,15,.13); color:var(--warn); }
+.chip { padding:5px 12px; border-radius:18px; font-size:12px; border:1px solid var(--line2); background:transparent; color:var(--dim); cursor:pointer; }
+.chip.active { background:var(--acc); border-color:var(--acc); color:#fff; }
+.linkrow { display:flex; gap:8px; align-items:center; max-width:100%; min-width:0; }
+.linkrow code { background:var(--card2); border:1px solid var(--line); border-radius:6px; padding:4px 8px; font-size:11px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; min-width:0; }
 .muted { color:var(--dim); font-size:12px; }
+#banner { display:none; background:rgba(231,76,60,.12); border:1px solid var(--err); color:var(--err); border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:14px; }
+#banner.show { display:block; }
+.login { max-width:380px; margin:14vh auto; }
+.toast { position:fixed; bottom:20px; right:20px; background:var(--card); border:1px solid var(--line2); border-radius:10px; padding:12px 18px; display:none; box-shadow:0 8px 30px var(--shadow); z-index:60; font-size:14px; }
+.toast.show { display:block; animation:fadein .2s; }
+@keyframes fadein { from { opacity:0; transform:translateY(8px);} to { opacity:1; transform:none;} }
+.modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.65); align-items:center; justify-content:center; z-index:50; padding:16px; }
+.modal.open { display:flex; }
+.modal .box { background:var(--card); border:1px solid var(--line2); border-radius:14px; padding:22px; max-width:92vw; width:560px; max-height:88vh; overflow-y:auto; box-shadow:0 12px 50px rgba(0,0,0,.5); }
+.modal .box.wide { width:680px; }
+.modal .name { margin-bottom:12px; font-weight:600; font-size:16px; word-break:break-all; }
+#qrImg { width:240px; height:240px; background:#fff; border-radius:10px; padding:10px; display:block; margin:8px auto; }
+pre.code { background:var(--card2); border:1px solid var(--line); border-radius:8px; padding:12px; font-size:11px; overflow:auto; max-height:240px; white-space:pre-wrap; word-break:break-all; line-height:1.45; }
+.tabs { display:flex; gap:6px; flex-wrap:wrap; margin:10px 0; }
+.tab { padding:6px 12px; border-radius:8px; border:1px solid var(--line2); background:transparent; color:var(--dim); font-size:12px; cursor:pointer; }
+.tab.active { background:var(--acc); color:#fff; border-color:var(--acc); }
+.legend { display:flex; gap:16px; align-items:center; font-size:12px; color:var(--dim); flex-wrap:wrap; }
+.legend .dot { width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:5px; }
+#rateChart { width:100%; height:150px; display:block; border-radius:8px; background:var(--card2); border:1px solid var(--line); }
+.footer { color:var(--dim); font-size:12px; text-align:center; margin-top:16px; }
+.actions { display:flex; gap:6px; flex-wrap:wrap; }
+.actions button { min-width:32px; }
 #loginOverlay { display:none; }
 body.noauth #loginOverlay { display:block; }
 body.noauth #main { display:none; }
+.scrolly { overflow-x:auto; }
+.spin { display:inline-block; width:14px; height:14px; border:2px solid var(--line2); border-top-color:var(--acc); border-radius:50%; animation:spin .8s linear infinite; vertical-align:-2px; }
+@keyframes spin { to { transform:rotate(360deg);} }
 </style>
 </head>
 <body class="noauth">
 
 <div id="loginOverlay">
   <div class="card login">
-    <h1>VLESS Dashboard</h1>
+    <h1 style="margin:0 0 14px">VLESS Dashboard</h1>
     <p class="muted" style="margin-bottom:14px">Enter admin token to manage peers</p>
     <div class="flex">
-      <input type="password" id="tokenInput" placeholder="ADMIN_TOKEN" style="flex:1">
-      <button onclick="login()">Login</button>
+      <input type="password" id="tokenInput" placeholder="ADMIN_TOKEN" class="grow">
+      <button id="loginBtn">Login</button>
     </div>
     <p class="muted" id="loginErr" style="margin-top:10px;color:var(--err)"></p>
   </div>
 </div>
 
 <div id="main">
-  <h1>VLESS Dashboard <span id="domainLabel"></span></h1>
+<div class="wrap">
 
-  <div class="grid">
+  <header>
+    <h1>VLESS Dashboard <span class="sub" id="domainLabel"></span></h1>
+    <div class="toolbar">
+      <select id="refreshSel" title="Auto-refresh interval">
+        <option value="5">5s</option>
+        <option value="10" selected>10s</option>
+        <option value="30">30s</option>
+        <option value="60">60s</option>
+      </select>
+      <button class="iconbtn" id="themeBtn" title="Toggle theme">◐</button>
+      <button class="iconbtn" id="settingsBtn" title="Settings">⚙</button>
+    </div>
+  </header>
+
+  <div id="banner"></div>
+
+  <div class="grid" style="margin-bottom:16px">
     <div class="stat"><div class="label">Server</div><div class="value" id="srvDomain">-</div></div>
     <div class="stat"><div class="label">Port / TLS</div><div class="value" id="srvPort">-</div></div>
     <div class="stat"><div class="label">WS Path</div><div class="value" id="srvPath">-</div></div>
-    <div class="stat"><div class="label">Peers</div><div class="value" id="srvPeers">-</div></div>
+    <div class="stat"><div class="label">Peers <small id="srvPeersSub"></small></div><div class="value" id="srvPeers">-</div></div>
+    <div class="stat"><div class="label">Total Down</div><div class="value" id="totDown">0 B</div></div>
+    <div class="stat"><div class="label">Total Up</div><div class="value" id="totUp">0 B</div></div>
+    <div class="stat"><div class="label">Peak Rate</div><div class="value" id="peakRate">0 B/s</div></div>
+    <div class="stat"><div class="label">Uptime</div><div class="value" id="uptime">0s</div></div>
   </div>
 
   <div class="card">
-    <div class="flex" style="justify-content:space-between;margin-bottom:16px">
-      <h1 style="margin:0;font-size:16px">Peers <span id="activeCount"></span></h1>
-      <div class="flex">
-        <input type="text" id="newName" placeholder="peer name (optional)">
-        <button onclick="addPeer()">+ New peer</button>
+    <div class="head">
+      <h2>Live throughput</h2>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--acc)"></span>Downlink</span>
+        <span><span class="dot" style="background:var(--ok)"></span>Uplink</span>
+        <span id="rateLegend" class="muted"></span>
       </div>
     </div>
-    <table>
-      <thead><tr><th>Name</th><th>Status</th><th>Traffic (down / up)</th><th>Share link</th><th style="width:180px">Actions</th></tr></thead>
-      <tbody id="peerRows"></tbody>
-    </table>
+    <canvas id="rateChart"></canvas>
   </div>
+
+  <div class="card">
+    <div class="head">
+      <h2>Peers <span class="muted" id="activeCount"></span></h2>
+      <div class="flex">
+        <input type="search" id="search" placeholder="Filter by name…" class="grow" style="max-width:220px">
+        <div class="flex" id="pillRow">
+          <button class="chip active" data-st="all">All</button>
+          <button class="chip" data-st="online">Online</button>
+          <button class="chip" data-st="idle">Idle</button>
+          <button class="chip" data-st="offline">Offline</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex" style="margin-bottom:14px">
+      <input type="text" id="newName" placeholder="peer name (optional)" style="max-width:200px">
+      <button id="addBtn">+ New peer</button>
+      <span style="flex:1"></span>
+      <button class="ghost" id="copyAllBtn">Copy all</button>
+      <button class="ghost" id="dlLinksBtn">Links .txt</button>
+      <button class="ghost" id="dlSubBtn">Subscription</button>
+      <button class="ghost" id="dlJsonBtn">v2rayN JSON</button>
+      <button class="ghost" id="dlBakBtn">Backup</button>
+    </div>
+
+    <div class="scrolly">
+      <table>
+        <thead><tr>
+          <th data-sort="name">Name <span class="arr"></span></th>
+          <th data-sort="status">Status <span class="arr"></span></th>
+          <th data-sort="dl" style="text-align:right">Download <span class="arr"></span></th>
+          <th data-sort="ul" style="text-align:right">Upload <span class="arr"></span></th>
+          <th data-sort="total" style="text-align:right">Total <span class="arr"></span></th>
+          <th data-sort="created">Created <span class="arr"></span></th>
+          <th style="width:60px">Share</th>
+          <th style="width:210px">Actions</th>
+        </tr></thead>
+        <tbody id="peerRows"></tbody>
+      </table>
+    </div>
+    <p class="hint" id="tableHint" style="margin-top:10px"></p>
+  </div>
+
+  <div class="footer">VLESS Dashboard · auto-refreshes · token and settings stay in your browser</div>
+</div>
 </div>
 
-<div id="qrModal"><div class="box">
+<div class="modal" id="qrModal"><div class="box">
   <div class="name" id="qrName"></div>
-  <img id="qrImg" alt="QR">
-  <div id="qrStatus"></div>
-  <code id="qrLink"></code>
-  <div class="flex" style="justify-content:center;margin-top:16px">
-    <button onclick="copyQrLink()">Copy link</button>
-    <button class="ghost" onclick="closeQr()">Close</button>
+  <img id="qrImg" alt="QR code">
+  <div id="qrStatus" class="muted" style="text-align:center;min-height:18px"></div>
+  <div class="linkrow" style="margin:8px 0"><code id="qrLink"></code><button class="sm" id="qrCopy">Copy</button></div>
+  <div class="flex" style="justify-content:center">
+    <button class="sm" id="qrDl">Download PNG</button>
+    <button class="ghost sm" id="cfgOpenBtn">Client configs</button>
+    <button class="ghost sm" id="closeQrBtn">Close</button>
   </div>
+</div></div>
+
+<div class="modal" id="cfgModal"><div class="box wide">
+  <div class="name" id="cfgName"></div>
+  <div class="tabs">
+    <button class="tab active" data-ct="uri">URI</button>
+    <button class="tab" data-ct="shadow">Shadowrocket</button>
+    <button class="tab" data-ct="xray">Xray JSON</button>
+    <button class="tab" data-ct="clash">Clash</button>
+  </div>
+  <pre class="code" id="cfgCode"></pre>
+  <div class="flex" style="justify-content:flex-end;margin-top:12px">
+    <button class="sm" id="cfgCopy">Copy</button>
+    <button class="ghost sm" id="cfgDl">Download</button>
+    <button class="ghost sm" id="closeCfgBtn">Close</button>
+  </div>
+</div></div>
+
+<div class="modal" id="setModal"><div class="box">
+  <div class="name">Settings</div>
+  <p class="muted" style="margin-bottom:8px">Domain override (optional, e.g. a custom domain / CDN host). Display-only; per-peer links below are regenerated from it.</p>
+  <div class="flex">
+    <input type="text" id="overrideHost" placeholder="your.domain.com" class="grow">
+    <input type="text" id="overridePort" placeholder="443" style="width:70px">
+    <button class="sm" id="overrideApply">Apply</button>
+    <button class="ghost sm" id="overrideReset">Reset</button>
+  </div>
+  <div style="height:10px"></div>
+  <p class="muted">Client import guides</p>
+  <div class="flex" style="margin-top:8px">
+    <button class="ghost sm" id="helpBtn">Import how-to</button>
+    <button class="ghost sm" id="closeSetBtn">Close</button>
+  </div>
+</div></div>
+
+<div class="modal" id="helpModal"><div class="box wide">
+  <div class="name">Import guides</div>
+  <pre class="code" style="max-height:55vh" id="helpCode"></pre>
+  <div class="flex" style="justify-content:flex-end;margin-top:12px"><button class="ghost sm" id="closeHelpBtn">Close</button></div>
 </div></div>
 
 <div class="toast" id="toast"></div>
 
 <script>
+"use strict";
+// ---------------- state ----------------
+const $ = id => document.getElementById(id);
 let token = localStorage.getItem("vless_token") || "";
 let peers = [];
+let info = { domain: "?", port: 443, ws_path: "/ws" };
 let prevTraffic = {};
 let lastActive = {};
-const retryable = (e) => e && e.retryable;
+let samples = [];
+let prevTotals = { d: 0, u: 0 };
+let peakRate = 0;
+let sortKey = "total", sortDir = -1;
+let filterQ = "", filterStatus = "all";
+let timer = null, uptimeTicker = null;
+const startedAt = Date.now();
+const state = {
+  theme: localStorage.getItem("vless_theme") || "dark",
+  refresh: parseInt(localStorage.getItem("vless_refresh") || "10", 10),
+  override: (() => { try { return JSON.parse(localStorage.getItem("vless_override") || "{}"); } catch (e) { return {}; } })()
+};
+
+// ---------------- helpers ----------------
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const fmtB = n => {
+  if (n >= 1e9) return (n/1e9).toFixed(2) + " GB";
+  if (n >= 1e6) return (n/1e6).toFixed(1) + " MB";
+  if (n >= 1e3) return (n/1e3).toFixed(1) + " KB";
+  return Math.round(n) + " B";
+};
+const ago = ms => {
+  const s = Math.round(ms / 1000);
+  if (s < 60) return s + "s ago";
+  const m = Math.round(s / 60);
+  if (m < 60) return m + "m ago";
+  return Math.round(m / 60) + "h ago";
+};
+const prettyDate = ts => ts ? new Date(ts * 1000).toLocaleDateString() : "—";
+const b64 = s => btoa(String.fromCharCode(...new TextEncoder().encode(s)));
+const retryable = e => !!(e && e.retryable);
+
 const withRetry = async (fn, attempts = 6) => {
   let lastErr;
   for (let i = 0; i < attempts; i++) {
     try { return await fn(); }
-    catch (e) {
-      lastErr = e;
-      if (!retryable(e)) throw e;
-      await new Promise(r => setTimeout(r, 250 * Math.pow(2, i)));
-    }
+    catch (e) { lastErr = e; if (!retryable(e)) throw e; await new Promise(r => setTimeout(r, 250 * Math.pow(2, i))); }
   }
   throw lastErr;
 };
+
 const api = async (path, opts = {}) => withRetry(async () => {
   let r;
   try {
-    r = await fetch(path, {
-      ...opts,
-      headers: { "Content-Type": "application/json", "X-Auth-Token": token, ...(opts.headers||{}) },
-    });
-  } catch (e) {
-    e.retryable = true;
-    throw e;
-  }
+    r = await fetch(path, { ...opts, headers: { "Content-Type": "application/json", "X-Auth-Token": token, ...(opts.headers || {}) } });
+  } catch (e) { e.retryable = true; throw e; }
   if (r.status === 401) { logout(); throw new Error("unauthorized"); }
   if (r.status === 404 || r.status >= 500) { const e = new Error("HTTP " + r.status); e.retryable = true; throw e; }
   if (!r.ok) throw new Error("HTTP " + r.status);
-  return r.json();
+  try { return await r.json(); } catch (e) { return {}; }
 });
-const toast = (msg) => { const t = document.getElementById("toast"); t.textContent = msg; t.style.display = "block"; setTimeout(() => t.style.display = "none", 2500); };
 
+const toast = msg => {
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2600);
+};
+
+async function copyText(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); toast("Copied"); return; }
+    throw new Error("no-clipboard");
+  } catch (e) {
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); toast("Copied"); }
+    catch (e2) { toast("Copy failed"); }
+    ta.remove();
+  }
+}
+
+function download(name, text, mime) {
+  const blob = new Blob([text], { type: mime || "text/plain" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  toast("Downloaded " + name);
+}
+
+// ---------------- link generation ----------------
+function effectiveHost() { return (state.override.host || "").trim() || info.domain; }
+function effectivePort() { const p = parseInt(state.override.port, 10); return (p >= 1 && p <= 65535) ? p : info.port; }
+
+function linkFor(p) {
+  const host = effectiveHost();
+  const port = effectivePort();
+  const path = encodeURIComponent(info.ws_path || "/ws");
+  const remark = encodeURIComponent((p.name || p.id).slice(0, 32));
+  return `vless://${p.id}@${host}:${port}?encryption=none&security=tls&type=ws&host=${host}&path=${path}&fp=chrome#${remark}`;
+}
+
+// ---------------- auth ----------------
 function login() {
-  token = document.getElementById("tokenInput").value.trim();
+  token = $("tokenInput").value.trim();
   if (!token) return;
   localStorage.setItem("vless_token", token);
   checkAuth();
 }
 function logout() {
   localStorage.removeItem("vless_token");
-  token = "";
-  document.body.classList.add("noauth");
+  token = ""; document.body.classList.add("noauth");
 }
 async function checkAuth() {
   try {
     const r = await api("/api/auth");
-    if (r.ok) { document.body.classList.remove("noauth"); loadAll(); }
-    else document.getElementById("loginErr").textContent = "Invalid token";
-  } catch (e) { /* already handled */ }
+    if (r.ok) { document.body.classList.remove("noauth"); startAll(); }
+    else $("loginErr").textContent = "Invalid token";
+  } catch (e) { /* handled by api */ }
 }
 
-async function loadAll() {
-  const info = await api("/api/info");
-  document.getElementById("domainLabel").textContent = "— " + info.domain;
-  document.getElementById("srvDomain").textContent = info.domain;
-  document.getElementById("srvPort").textContent = info.port + " (TLS)";
-  document.getElementById("srvPath").textContent = info.ws_path;
-  await loadPeers();
+// ---------------- data loading ----------------
+async function loadInfo() {
+  info = await api("/api/info");
+  $("domainLabel").textContent = "— " + info.domain;
+  $("srvDomain").textContent = effectiveHost();
+  $("srvPort").textContent = effectivePort() + (info.port === 443 ? " (TLS)" : "");
+  $("srvPath").textContent = info.ws_path;
 }
 
-function statusBadge(p, now) {
-  if (p.online) return '<span class="badge on">ONLINE</span>';
-  const last = lastActive[p.id];
-  if (last && now - last < 45000) return '<span class="badge on">ONLINE</span>';
-  if (last) return '<span class="badge warn">IDLE · ' + ago(now - last) + '</span>';
-  return '<span class="badge off">OFFLINE</span>';
-}
-
-async function loadPeers() {
+async function loadPeers(stats) {
   const list = await api("/api/peers");
   peers = list;
   const now = Date.now();
+  let totD = 0, totU = 0;
   for (const p of list) {
-    if (p.online) { lastActive[p.id] = now; }
-    const t = p.uplink + p.downlink;
-    if (t > (prevTraffic[p.id] || 0)) lastActive[p.id] = now;
+    const t = (p.uplink || 0) + (p.downlink || 0);
+    if (p.online) lastActive[p.id] = now;
+    else if (t > (prevTraffic[p.id] || 0)) lastActive[p.id] = now;
     prevTraffic[p.id] = t;
+    totD += p.downlink || 0;
+    totU += p.uplink || 0;
   }
-  document.getElementById("srvPeers").textContent = peers.length;
+  $("totDown").textContent = fmtB(totD);
+  $("totUp").textContent = fmtB(totU);
+  $("srvPeers").textContent = list.length;
+  const onlineNow = list.filter(p => p.online).length;
+  $("srvPeersSub").textContent = "(" + onlineNow + " online)";
+
+  trackRate(totD, totU, stats);
+  render();
+}
+
+function trackRate(totD, totU) {
+  const now = Date.now();
+  const dT = (prevTotals.t) ? (now - prevTotals.t) / 1000 : 0;
+  const rateD = dT > 0 ? Math.max(0, (totD - prevTotals.d) / dT) : 0;
+  const rateU = dT > 0 ? Math.max(0, (totU - prevTotals.u) / dT) : 0;
+  prevTotals = { d: totD, u: totU, t: now };
+  peakRate = Math.max(peakRate, rateD, rateU);
+  $("peakRate").textContent = fmtB(Math.max(rateD, rateU, peakRate)) + (rateD || rateU ? "/s·peak" : "");
+  samples.push({ t: now, d: rateD, u: rateU });
+  if (samples.length > 90) samples.shift();
+  drawChart();
+}
+
+async function loadAll() {
+  try {
+    await loadInfo();
+    await loadPeers(false);
+    $("banner").classList.remove("show");
+  } catch (e) {
+    const b = $("banner");
+    b.textContent = "⚠ Failed to reach API — Railway edge may be warming up. Retrying…";
+    b.classList.add("show");
+  }
+}
+
+function startLoop() {
+  stopLoop();
+  loadAll();
+  timer = setInterval(() => { if (!document.hidden) loadAll(); }, state.refresh * 1000);
+}
+function stopLoop() { if (timer) { clearInterval(timer); timer = null; } }
+function startAll() {
+  startLoop();
+  uptimeTicker = setInterval(() => {
+    const s = Math.floor((Date.now() - startedAt) / 1000);
+    $("uptime").textContent = s < 60 ? s + "s" : s < 3600 ? Math.floor(s/60) + "m " + (s%60) + "s" : Math.floor(s/3600) + "h " + Math.floor((s%3600)/60) + "m";
+  }, 1000);
+}
+
+// ---------------- render ----------------
+function rowStatus(p, now) {
+  if (p.online) return { cls: "on", text: "Online" };
+  const last = lastActive[p.id];
+  if (last && now - last < 45000) return { cls: "on", text: "Online" };
+  if (last) return { cls: "warn", text: "Idle · " + ago(now - last) };
+  return { cls: "off", text: "Offline" };
+}
+
+function visiblePeers() {
+  const now = Date.now();
+  let list = peers.filter(p => {
+    if (filterQ && !(p.name || "").toLowerCase().includes(filterQ.toLowerCase())) return false;
+    const st = (() => {
+      if (p.online || (lastActive[p.id] && now - lastActive[p.id] < 45000)) return "online";
+      if (lastActive[p.id]) return "idle";
+      return "offline";
+    })();
+    if (filterStatus !== "all" && st !== filterStatus) return false;
+    return true;
+  });
+  const val = p => ({
+    name: (p.name || "").toLowerCase(),
+    status: p.online || (lastActive[p.id] && now - lastActive[p.id] < 45000) ? 2 : (lastActive[p.id] ? 1 : 0),
+    dl: p.downlink || 0, ul: p.uplink || 0,
+    total: (p.downlink || 0) + (p.uplink || 0),
+    created: p.created || 0
+  })[sortKey];
+  list.sort((a, b) => { const va = val(a), vb = val(b); return (va < vb ? -1 : va > vb ? 1 : 0) * sortDir; });
+  return list;
+}
+
+function render() {
+  const now = Date.now();
+  const list = visiblePeers();
+
   const online = peers.filter(p => p.online || (lastActive[p.id] && now - lastActive[p.id] < 45000)).length;
-  document.getElementById("activeCount").textContent = "(" + online + " online)";
-  const rows = peers.map(p => `
-    <tr>
-      <td>${escapeHtml(p.name)}</td>
-      <td>${statusBadge(p, now)}</td>
-      <td>${fmt(p.downlink)} / ${fmt(p.uplink)}</td>
-      <td><div class="link"><code title="${escapeAttr(p.share)}">${escapeHtml(truncate(p.share, 60))}</code><button class="ghost" onclick="copyText('${escapeAttr(p.share)}')">Copy</button></div></td>
-      <td>
-        <button class="ghost" onclick="showQr('${p.id}','${escapeAttr(p.name)}','${escapeAttr(p.share)}')">QR</button>
-        <button class="danger" onclick="delPeer('${p.id}')">Delete</button>
-      </td>
-    </tr>`).join("");
-  document.getElementById("peerRows").innerHTML = rows;
+  $("activeCount").textContent = "(" + online + " online)";
+
+  const maxTotal = Math.max(1, ...list.map(p => (p.downlink || 0) + (p.uplink || 0)));
+
+  const rows = list.map(p => {
+    const st = rowStatus(p, now);
+    const dl = p.downlink || 0, ul = p.uplink || 0, tot = dl + ul;
+    const link = linkFor(p);
+    const pct = Math.min(100, Math.round(tot / maxTotal * 100));
+    return `<tr>
+      <td><b>${esc(p.name)}</b></td>
+      <td><span class="badge ${st.cls}">${st.text}</span></td>
+      <td style="text-align:right">${fmtB(dl)}</td>
+      <td style="text-align:right">${fmtB(ul)}</td>
+      <td style="text-align:right"><div class="rowbar" style="justify-content:flex-end"><span>${fmtB(tot)}</span><div class="bar"><i style="width:${pct}%"></i></div></div></td>
+      <td title="${new Date((p.created||0)*1000).toLocaleString()}">${prettyDate(p.created)}</td>
+      <td><div class="actions"><button class="ghost sm" data-act="copy" data-id="${p.id}" title="${esc(link)}">⧉</button></div></td>
+      <td><div class="actions">
+        <button class="ghost sm" data-act="qr"   data-id="${p.id}">QR</button>
+        <button class="ghost sm" data-act="copy" data-id="${p.id}">⧉</button>
+        <button class="ghost sm" data-act="cfg"  data-id="${p.id}">Config</button>
+        <button class="danger sm" data-act="del" data-id="${p.id}">✕</button>
+      </div></td>
+    </tr>`;
+  }).join("");
+
+  $("peerRows").innerHTML = rows;
+  $("tableHint").textContent = list.length
+    ? (peers.length !== list.length ? "Showing " + list.length + " of " + peers.length + " peers" : "")
+    : (peers.length ? "No peers match the filter." : "No peers yet — create one above.");
 }
 
+// sort headers
+document.querySelectorAll("thead th[data-sort]").forEach(th => {
+  th.addEventListener("click", () => {
+    const k = th.dataset.sort;
+    if (sortKey === k) sortDir = -sortDir; else { sortKey = k; sortDir = k === "name" ? 1 : -1; }
+    document.querySelectorAll("thead th[data-sort] .arr").forEach(a => a.textContent = "");
+    th.querySelector(".arr").textContent = sortDir === 1 ? "▲" : "▼";
+    render();
+  });
+});
+document.querySelector("thead th[data-sort='total'] .arr").textContent = "▼";
+
+// filter
+$("search").addEventListener("input", e => { filterQ = e.target.value.trim(); render(); });
+$("pillRow").addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  filterStatus = b.dataset.st;
+  document.querySelectorAll(".chip").forEach(c => c.classList.toggle("active", c === b));
+  render();
+});
+
+// ---------------- peer CRUD ----------------
 async function addPeer() {
-  const name = document.getElementById("newName").value.trim();
-  const r = await api("/api/peers", { method: "POST", body: JSON.stringify({ name }) });
-  document.getElementById("newName").value = "";
-  toast("Peer created");
-  await loadPeers();
-}
-async function delPeer(id) {
-  if (!confirm("Delete this peer?")) return;
-  await api("/api/peers/" + id, { method: "DELETE" });
-  toast("Peer deleted");
-  await loadPeers();
+  const name = $("newName").value.trim();
+  const btn = $("addBtn"); btn.disabled = true; btn.innerHTML = '<span class="spin"></span>';
+  try {
+    const r = await api("/api/peers", { method: "POST", body: JSON.stringify({ name }) });
+    $("newName").value = "";
+    toast("Peer created");
+    await loadPeers(false); render();
+  } catch (e) { toast("Create failed"); }
+  btn.disabled = false; btn.textContent = "+ New peer";
 }
 
-async function showQr(id, name, link) {
-  document.getElementById("qrName").textContent = name;
-  document.getElementById("qrLink").textContent = link;
-  document.getElementById("qrModal").classList.add("open");
-  window._qrLink = link;
-  const img = document.getElementById("qrImg");
-  const status = document.getElementById("qrStatus");
+async function delPeer(id) {
+  const p = peers.find(x => x.id === id);
+  const nm = p ? p.name : id;
+  if (!confirm(`Delete peer "${nm}"? This cannot be undone.`)) return;
+  try {
+    await api("/api/peers/" + id, { method: "DELETE" });
+    toast("Peer deleted");
+    delete prevTraffic[id]; delete lastActive[id];
+    await loadPeers(false); render();
+  } catch (e) { toast("Delete failed"); }
+}
+
+$("addBtn").addEventListener("click", addPeer);
+$("newName").addEventListener("keydown", e => { if (e.key === "Enter") addPeer(); });
+
+$("peerRows").addEventListener("click", e => {
+  const b = e.target.closest("button[data-act]"); if (!b) return;
+  const id = b.dataset.id, act = b.dataset.act;
+  const p = peers.find(x => x.id === id); if (!p) return;
+  if (act === "qr") showQr(p);
+  else if (act === "copy") copyText(linkFor(p));
+  else if (act === "cfg") openCfg(p, "uri");
+  else if (act === "del") delPeer(id);
+});
+
+// ---------------- QR ----------------
+let currentPeer = null, qrBlobUrl = null;
+async function showQr(p) {
+  currentPeer = p;
+  $("qrName").textContent = p.name || p.id;
+  $("qrLink").textContent = linkFor(p);
+  const img = $("qrImg"), status = $("qrStatus");
   img.style.display = "none";
   status.textContent = "Loading QR…";
-  status.style.color = "var(--dim)";
+  $("qrModal").classList.add("open");
+  if (qrBlobUrl) URL.revokeObjectURL(qrBlobUrl);
   try {
-    const r = await withRetry(async () => {
-      const res = await fetch("/api/qr/" + id, { headers: { "X-Auth-Token": token } });
-      if (!res.ok) { const e = new Error("HTTP " + res.status); e.retryable = true; throw e; }
-      return res;
+    const res = await withRetry(async () => {
+      const r = await fetch("/api/qr/" + p.id, { headers: { "X-Auth-Token": token } });
+      if (!r.ok) { const e = new Error("HTTP " + r.status); e.retryable = true; throw e; }
+      return r;
     });
-    img.src = URL.createObjectURL(await r.blob());
-    img.style.display = "block";
-    status.textContent = "";
+    qrBlobUrl = URL.createObjectURL(await res.blob());
+    img.src = qrBlobUrl;
+    img.style.display = "block"; status.textContent = "";
   } catch (e) {
-    status.textContent = "QR failed to load";
-    status.style.color = "var(--err)";
+    status.textContent = "QR failed to load"; status.style.color = "var(--err)";
   }
 }
-function closeQr() { document.getElementById("qrModal").classList.remove("open"); }
-function copyQrLink() { copyText(window._qrLink); }
-function copyText(t) {
-  navigator.clipboard.writeText(t).then(() => toast("Copied")).catch(() => toast("Copy failed"));
-}
-function fmt(bytes) {
-  if (bytes >= 1e9) return (bytes/1e9).toFixed(2) + " GB";
-  if (bytes >= 1e6) return (bytes/1e6).toFixed(1) + " MB";
-  if (bytes >= 1e3) return (bytes/1e3).toFixed(1) + " KB";
-  return bytes + " B";
-}
-function ago(ms) {
-  const s = Math.round(ms / 1000);
-  if (s < 60) return s + "s ago";
-  const m = Math.round(s / 60);
-  if (m < 60) return m + "m ago";
-  return Math.round(m / 60) + "h ago";
-}
-function truncate(s, n) { return s.length > n ? s.slice(0, n) + "…" : s; }
-function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
-function escapeAttr(s) { return escapeHtml(s); }
+$("qrCopy").addEventListener("click", () => currentPeer && copyText(linkFor(currentPeer)));
+$("qrDl").addEventListener("click", () => {
+  if (!qrBlobUrl) return toast("No QR yet");
+  const a = document.createElement("a");
+  a.href = qrBlobUrl; a.download = "vless-" + (currentPeer.name || currentPeer.id).replace(/[^\w.-]+/g, "_") + ".png";
+  document.body.appendChild(a); a.click(); a.remove(); toast("QR saved");
+});
+$("cfgOpenBtn").addEventListener("click", () => { $("qrModal").classList.remove("open"); if (currentPeer) openCfg(currentPeer, "uri"); });
+$("closeQrBtn").addEventListener("click", () => $("qrModal").classList.remove("open"));
 
-checkAuth();
-setInterval(() => { if (!document.body.classList.contains("noauth")) loadPeers().catch(() => {}); }, 8000);
+// ---------------- client configs ----------------
+const CFG_TABS = { uri: "URI (V2rayN / v2rayNG)", shadow: "Shadowrocket", xray: "Xray JSON", clash: "Clash YAML" };
+
+function xrayClientJson(p) {
+  const host = effectiveHost(), port = effectivePort(), path = info.ws_path || "/ws";
+  return JSON.stringify({
+    log: { loglevel: "warning" },
+    inbounds: [
+      { port: 10808, listen: "127.0.0.1", protocol: "socks", settings: { udp: true } },
+      { port: 10809, listen: "127.0.0.1", protocol: "http" }
+    ],
+    outbounds: [{
+      protocol: "vless",
+      settings: { vnext: [{ address: host, port: port, users: [{ id: p.id, encryption: "none", flow: "" }] }] },
+      streamSettings: {
+        network: "ws",
+        security: "tls",
+        wsSettings: { path: path, headers: { Host: host } },
+        tlsSettings: { allowInsecure: false, fingerprint: "chrome" }
+      }
+    }],
+    routing: { domainStrategy: "IPIfNonMatch" }
+  }, null, 2);
+}
+
+function clashYaml(p) {
+  const host = effectiveHost(), port = effectivePort(), path = info.ws_path || "/ws";
+  const name = "vless-" + (p.name || p.id).replace(/[^\w.-]+/g, "_").slice(0, 24);
+  return [
+    "- name: \"" + esc(name) + "\"",
+    "  type: vless",
+    "  server: " + host,
+    "  port: " + port,
+    "  uuid: " + p.id,
+    "  network: ws",
+    "  tls: true",
+    "  servername: " + host,
+    "  udp: true",
+    "  client-fingerprint: chrome",
+    "  ws-opts:",
+    "    path: \"" + path + "\"",
+    "    headers:",
+    "      Host: [" + host + "]"
+  ].join("\n");
+}
+
+function cfgText(p, kind) {
+  if (kind === "uri") return linkFor(p);
+  if (kind === "shadow") return "shadowrocket://add/" + b64(linkFor(p)) + "\n\nor paste this direct URI:\n" + linkFor(p);
+  if (kind === "xray") return xrayClientJson(p);
+  if (kind === "clash") return "# add under proxies:\nproxies:\n" + clashYaml(p);
+  return "";
+}
+
+function openCfg(p, kind) {
+  currentPeer = p;
+  $("cfgName").textContent = (p.name || p.id) + " — client configs";
+  document.querySelectorAll("#cfgModal .tab").forEach(t => t.classList.toggle("active", t.dataset.ct === kind));
+  $("cfgCode").textContent = cfgText(p, kind);
+  $("cfgModal").classList.add("open");
+}
+document.querySelectorAll("#cfgModal .tab").forEach(t => t.addEventListener("click", () => {
+  currentPeer && openCfg(currentPeer, t.dataset.ct);
+}));
+$("cfgCopy").addEventListener("click", () => copyText($("cfgCode").textContent));
+$("cfgDl").addEventListener("click", () => {
+  if (!currentPeer) return;
+  const kind = document.querySelector("#cfgModal .tab.active").dataset.ct;
+  const ext = kind === "clash" ? "yaml" : kind === "xray" ? "json" : "txt";
+  download("vless-" + (currentPeer.name || currentPeer.id).replace(/[^\w.-]+/g, "_") + "." + ext, $("cfgCode").textContent);
+});
+$("closeCfgBtn").addEventListener("click", () => $("cfgModal").classList.remove("open"));
+
+// ---------------- bulk exports ----------------
+$("copyAllBtn").addEventListener("click", () => {
+  if (!peers.length) return toast("No peers");
+  copyText(peers.map(linkFor).join("\n"));
+});
+$("dlLinksBtn").addEventListener("click", () => {
+  if (!peers.length) return toast("No peers");
+  download("vless-links.txt", peers.map(linkFor).join("\n") + "\n");
+});
+$("dlSubBtn").addEventListener("click", () => {
+  if (!peers.length) return toast("No peers");
+  download("vless-subscription.txt", b64(peers.map(linkFor).join("\n")) + "\n");
+});
+$("dlJsonBtn").addEventListener("click", () => {
+  if (!peers.length) return toast("No peers");
+  const host = effectiveHost();
+  const ob = peers.map((p, i) => ({
+    tag: p.name || "peer-" + i,
+    protocol: "vless",
+    settings: { vnext: [{ address: host, port: effectivePort(), users: [{ id: p.id, encryption: "none", flow: "" }] }] },
+    streamSettings: {
+      network: "ws", security: "tls",
+      wsSettings: { path: info.ws_path || "/ws", headers: { Host: host } },
+      tlsSettings: { fingerprint: "chrome" }
+    }
+  }));
+  download("v2rayn-config.json", JSON.stringify({ outbounds: ob }, null, 2) + "\n", "application/json");
+});
+$("dlBakBtn").addEventListener("click", () => {
+  download("vless-backup-" + new Date().toISOString().slice(0, 10) + ".json", JSON.stringify({
+    exported: new Date().toISOString(), domain: info.domain, ws_path: info.ws_path, peers
+  }, null, 2) + "\n", "application/json");
+});
+
+// ---------------- settings / theme ----------------
+function applyTheme() {
+  document.documentElement.setAttribute("data-theme", state.theme);
+  $("themeBtn").textContent = state.theme === "dark" ? "☀" : "◐";
+}
+$("themeBtn").addEventListener("click", () => {
+  state.theme = state.theme === "dark" ? "light" : "dark";
+  localStorage.setItem("vless_theme", state.theme);
+  applyTheme();
+});
+
+$("refreshSel").value = String(state.refresh);
+$("refreshSel").addEventListener("change", e => {
+  state.refresh = parseInt(e.target.value, 10);
+  localStorage.setItem("vless_refresh", String(state.refresh));
+  if (!document.body.classList.contains("noauth")) startLoop();
+});
+
+function applyOverrideToInputs() {
+  $("overrideHost").value = state.override.host || "";
+  $("overridePort").value = state.override.port || "";
+}
+function persistOverride() {
+  localStorage.setItem("vless_override", JSON.stringify(state.override));
+  if ($("srvDomain")) $("srvDomain").textContent = effectiveHost();
+  if ($("srvPort")) $("srvPort").textContent = effectivePort() + (info.port === 443 ? " (TLS)" : "");
+  render();
+}
+$("overrideApply").addEventListener("click", () => {
+  state.override.host = $("overrideHost").value.trim();
+  state.override.port = $("overridePort").value.trim();
+  persistOverride();
+  toast("Override applied");
+});
+$("overrideReset").addEventListener("click", () => {
+  state.override.host = ""; state.override.port = "";
+  applyOverrideToInputs(); persistOverride(); toast("Override reset");
+});
+$("settingsBtn").addEventListener("click", openSettings);
+function openSettings() {
+  applyOverrideToInputs();
+  $("setModal").classList.add("open");
+}
+$("closeSetBtn").addEventListener("click", () => $("setModal").classList.remove("open"));
+
+// ---------------- help ----------------
+const HELP_TEXT = [
+  "V2rayN / V2rayNG",
+  "1. Tap 'Config' on a peer row → URI tab → Copy.",
+  "2. In V2rayN: Servers → Import from clipboard. In V2rayNG: + → 手动输入 → paste.",
+  "",
+  "Shadowrocket (iOS)",
+  "1. Copy the URI, then in Shadowrocket: Add Server → Import from Clipboard.",
+  "2. Or use the Shadowrocket tab which provides a shadowrocket://add/ deep link.",
+  "",
+  "Clash (Clash Verge / Metacubexd)",
+  "1. Open the Clash tab → copy the YAML → append to your config under 'proxies:' and reference it in your rule set/group.",
+  "",
+  "Xray client (core + GUI)",
+  "1. Xray JSON tab is a full client config (socks 10808 / http 10809).",
+  "2. Save as config.json next to the xray binary and run: xray run -c config.json",
+  "",
+  "Subscription / bulk import",
+  "1. 'Subscription' downloads a base64 blob of all current peer URIs.",
+  "2. Host it on a raw URL and use it as a subscription link in v2rayNG / Shadowrocket.",
+  "",
+  "Notes",
+  "• Domain override (⚙) only changes how links are displayed/copied here.",
+  "• Traffic numbers reset whenever the server restarts (they come from Xray's live counters)."
+].join("\n");
+$("helpBtn").addEventListener("click", () => { $("helpCode").textContent = HELP_TEXT; $("helpModal").classList.add("open"); });
+$("closeHelpBtn").addEventListener("click", () => $("helpModal").classList.remove("open"));
+
+// ---------------- chart ----------------
+function drawChart() {
+  const cv = $("rateChart");
+  if (!cv) return;
+  const dpr = window.devicePixelRatio || 1;
+  const w = cv.clientWidth || 600, h = cv.clientHeight || 150;
+  if (cv.width !== w * dpr || cv.height !== h * dpr) { cv.width = w * dpr; cv.height = h * dpr; }
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+
+  const cs = document.documentElement.getAttribute("data-theme") === "light"
+    ? { grid: "#d7dde8", dim: "#5a6577" } : { grid: "#20273a", dim: "#8a93a8" };
+
+  const maxV = Math.max(0.5, ...samples.map(s => Math.max(s.d, s.u))) * 1.15;
+
+  // grid
+  ctx.strokeStyle = cs.grid; ctx.lineWidth = 1;
+  for (let i = 1; i <= 4; i++) {
+    const y = h - (h * i / 5);
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+  }
+  ctx.fillStyle = cs.dim; ctx.font = "10px Segoe UI, system-ui";
+  ctx.textAlign = "left";
+  ctx.fillText(fmtB(maxV) + "/s", 6, 14);
+
+  const line = (key, color) => {
+    if (samples.length < 2) return;
+    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath();
+    samples.forEach((s, i) => {
+      const x = i / (samples.length - 1) * (w - 8) + 4;
+      const y = h - 4 - (s[key] / maxV) * (h - 28);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  };
+  line("d", getComputedStyle(document.documentElement).getPropertyValue("--acc").trim() || "#4f8cff");
+  line("u", getComputedStyle(document.documentElement).getPropertyValue("--ok").trim() || "#2ecc71");
+
+  const last = samples[samples.length - 1];
+  $("rateLegend").textContent = last
+    ? fmtB(last.d) + "/s ↓  " + fmtB(last.u) + "/s ↑"
+    : "";
+}
+window.addEventListener("resize", drawChart);
+
+// ---------------- boot ----------------
+function boot() {
+  applyTheme();
+  document.addEventListener("visibilitychange", () => {
+    if (document.body.classList.contains("noauth")) return;
+    if (document.hidden) stopLoop(); else startLoop();
+  });
+  $("loginBtn").addEventListener("click", login);
+  $("tokenInput").addEventListener("keydown", e => { if (e.key === "Enter") login(); });
+  checkAuth();
+}
+
+boot();
 </script>
 </body>
 </html>
