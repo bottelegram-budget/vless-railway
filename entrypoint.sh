@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-echo "[entrypoint] starting with PORT=${PORT:-unset} UUID=${UUID:+set} WS_PATH=${WS_PATH:-/ws}"
+echo "[entrypoint] starting with PORT=${PORT:-unset} UUID=${UUID:+set} WS_PATH=${WS_PATH:+set}"
 
 if [ -z "$UUID" ]; then
   echo "ERROR: UUID environment variable is not set (generate with: uuidgen)" >&2
@@ -14,7 +14,8 @@ ADMIN_TOKEN="${ADMIN_TOKEN:-}"
 PUBLIC_DOMAIN="${PUBLIC_DOMAIN:-$RAILWAY_PUBLIC_DOMAIN}"
 
 if [ -z "$ADMIN_TOKEN" ]; then
-  echo "WARNING: ADMIN_TOKEN not set - dashboard API is unauthenticated!" >&2
+  echo "ERROR: ADMIN_TOKEN is required" >&2
+  exit 1
 fi
 
 export PORT WS_PATH ADMIN_TOKEN PUBLIC_DOMAIN UUID

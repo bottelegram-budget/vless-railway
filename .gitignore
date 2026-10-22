@@ -11,3 +11,11 @@ __pycache__/
 # Misc
 *.log
 .env
+
+.env
+.env.*
+!.env.example
+
+.venv/
+outputs/
+backups/

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import hmac
 import os
 import re
 import signal
@@ -137,7 +138,7 @@ def share_link(peer_id):
 
 
 def check_auth():
-    return ADMIN_TOKEN and request.headers.get("X-Auth-Token") == ADMIN_TOKEN
+    return bool(ADMIN_TOKEN) and hmac.compare_digest(request.headers.get("X-Auth-Token", ""), ADMIN_TOKEN)
 
 
 @app.route("/")
@@ -152,6 +153,8 @@ def api_healthz():
 
 @app.route("/api/info")
 def api_info():
+    if not check_auth():
+        return jsonify({"error": "unauthorized"}), 401
     return jsonify({
         "domain": PUBLIC_DOMAIN,
         "port": 443,
